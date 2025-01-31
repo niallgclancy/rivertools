@@ -1,5 +1,7 @@
 This repository currently contains just one function, rivmatch().
+
 **Description:**
+
 **rivmatch()** is a function for cleaning messy river and stream data. Point data is often collected to represent sampling sites (fish surveys, water quality collection, etc), but often the GPS locations do not align with digitized stream layers from NHD or similar line-type GIS files. This function uses the sf (simple features) package for spatial data.
 This function looks for matches (case insensitive) between stream name columns in sf objects of point data and corresponding stream layers (such as NHD) and identifies TRUE matches (nearest stream layer corresponds to the point layer name; >90% match), MAYBE matches (nearest stream layer and point layer names are partial matches; 70-90% match), and FALSE matches (point and stream layer names do not match). Points whose nearest stream does not have the same name (FALSE match) then search within the searchdist (set by the user) for a TRUE match. All TRUE matches are then snapped to the stream layer. The output is a new sf object with a column describing the match (TRUE, MAYBE, or FALSE), updated geometries (location data) for TRUE matches, and the distance to the nearest stream (nearest match for TRUE matches).
 
