@@ -17,7 +17,8 @@ searchdist   distance (in units of sf object projection) that non-matches search
 
 Example in which fish collection data represented by a sf points object called 'fish_points' needs to be snapped to the corresponding national hydrography dataset stream line represented by a sf line object called 'nhd_lines'. Both sf objects share the column name "GNIS_NAME" containing the stream's name. The search distance ('searchdist') is 200 meters if the nearest stream line to the fish point does not match (assuming the spatial projection uses meters).
 
-rivmatch(fish_points, nhd_lines, column_name="GNIS_NAME", searchdist=200) 
+snapped_points -> rivmatch(fish_points, nhd_lines, column_name="GNIS_NAME", searchdist=200) 
+print(snapped_points)
 
 **Note**
 
