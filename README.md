@@ -1,4 +1,4 @@
-This repository currently contains just one function, rivmatch().
+This repository currently contains just one function, rivmatch(). It was designed using ChatGPT 4o mini.
 
 **Description:**
 
