@@ -20,6 +20,22 @@ Example in which fish collection data represented by a sf points object called '
 snapped_points -> rivmatch(fish_points, nhd_lines, column_name="GNIS_NAME", searchdist=200) 
 print(snapped_points)
 
+
+
+
+
+
+**est.month.mean()** is a function for taking an sf points object of instantaneous stream temperature readings and estimating the mean August temperature at those locations. It searches for USGS NWIS locations within a set 'searchdist' of each instantaneous reading and, if found, creates a mean August temperature estimate based on the relationship between the instantaneous and continuous locations' data. See https://github.com/niallgclancy/StreamTempConversion for proof-of-concept analysis.
+
+**Arguments**
+
+instantaneous_sf, searchdist
+instantaneous_sf          simple features object for point data with the following column names (req'd): Month (integer), Day (integer), Year (integer), Time (military format), inst.temp (degrees celsius).
+searchdist   distance (in units of sf object projection) to search for a USGS NWIS continuous stream temperature logger. 
+
+
+
+
 **Note**
 
 If you are not familiar with the simple feature (sf) package, it is very easy to use. Shapefiles for both points and lines can easily be loaded into R as sf objects.
