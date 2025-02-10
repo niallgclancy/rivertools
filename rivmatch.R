@@ -173,3 +173,126 @@ sf1 %>%
   geom_sf_text(data = result, aes(label = name)) +
   geom_sf(data = result, aes(color = match, size = match))
 
+
+
+
+
+
+
+
+
+###################est.month.mean function
+
+# Load required libraries
+library(dataRetrieval)
+library(dplyr)
+library(lubridate)
+library(geosphere)  # For calculating distances between sites
+library(readxl)  # For reading Excel files
+library(sf)  # For handling spatial data
+library(units)  # For handling units
+
+# Load the Excel file with site numbers
+sites_df <- read_excel("sitesnwisalltemps.xlsx")
+
+# Ensure site numbers are treated as character to preserve leading zeros and filter for 8-digit site numbers
+sites_df <- sites_df %>% 
+  mutate(SiteNumber = as.character(SiteNumber)) %>% 
+  filter(nchar(SiteNumber) == 8)
+
+# Retrieve site metadata to get coordinates
+site_metadata <- whatNWISsites(siteNumber = sites_df$SiteNumber)
+
+# Filter for sites with valid latitude and longitude
+site_metadata <- site_metadata %>% 
+  filter(!is.na(dec_lat_va) & !is.na(dec_long_va)) %>% 
+  select(site_no, dec_lat_va, dec_long_va)
+
+# Function to estimate mean August temperatures for an sf object with instantaneous readings
+est.month.mean <- function(instantaneous_sf, searchdist = set_units(50, "miles")) {  # Default search distance in miles
+  # Ensure the sf object is in the correct CRS (WGS84)
+  instantaneous_sf <- st_transform(instantaneous_sf, crs = 4326)
+  
+  # Combine date and time columns into a single datetime object
+  instantaneous_sf <- instantaneous_sf %>%
+    mutate(
+      date.time = make_datetime(Year, Month, Day) + 
+        hours(as.integer(substr(Time, 1, 2))) + 
+        minutes(as.integer(substr(Time, 3, 4)))
+    )
+  
+  # Convert site metadata to an sf object
+  site_sf <- st_as_sf(site_metadata, coords = c("dec_long_va", "dec_lat_va"), crs = 4326)
+  
+  # Initialize an empty list to store results
+  estimated_temps <- vector("list", nrow(instantaneous_sf))
+  
+  # Convert search distance to meters if necessary
+  if (!inherits(searchdist, "units")) {
+    searchdist <- set_units(searchdist, "m")
+  }
+  
+  # Loop through each instantaneous reading
+  for (i in seq_len(nrow(instantaneous_sf))) {
+    inst_point <- instantaneous_sf[i, ]
+    inst_temp <- inst_point$inst.temp
+    inst_time <- inst_point$date.time
+    
+    # Find USGS sites within the specified distance
+    distances <- st_distance(inst_point, site_sf)
+    nearby_sites <- site_sf[distances <= searchdist, ]
+    
+    # Initialize variable to store best match
+    best_estimate <- NA
+    
+    # Check each nearby site for matching time data
+    for (j in seq_len(nrow(nearby_sites))) {
+      site_no <- nearby_sites$site_no[j]
+      
+      # Retrieve continuous temperature data for August 2023
+      continuous_data <- readNWISuv(siteNumbers = site_no, parameterCd = '00010', 
+                                    startDate = '2023-08-01', endDate = '2023-08-31')
+      
+      # Identify the correct temperature column name dynamically
+      temp_col <- grep('^X_00010_00000$', names(continuous_data), value = TRUE)
+      
+      # Skip if temperature data is missing
+      if (length(temp_col) == 0) next
+      
+      # Prepare continuous data
+      continuous_data <- continuous_data %>% 
+        select(dateTime, temp_continuous = all_of(temp_col)) %>% 
+        filter(!is.na(temp_continuous))
+      
+      # Find the closest reading within 1 hour
+      closest_reading <- continuous_data %>% 
+        filter(between(dateTime, inst_time - hours(1), inst_time + hours(1))) %>% 
+        arrange(abs(difftime(dateTime, inst_time, units = "mins"))) %>% 
+        slice(1)
+      
+      # If a close reading exists, estimate mean August temperature
+      if (nrow(closest_reading) > 0) {
+        temp_offset <- inst_temp - closest_reading$temp_continuous
+        mean_august_temp <- mean(continuous_data$temp_continuous, na.rm = TRUE)
+        estimated_mean_temp <- mean_august_temp + temp_offset
+        
+        # Select the first valid estimate
+        best_estimate <- estimated_mean_temp
+        break  # Stop checking other sites once a valid estimate is found
+      }
+    }
+    
+    # Store the estimated mean temperature
+    estimated_temps[[i]] <- best_estimate
+  }
+  
+  # Append the estimated temperatures to the original sf object
+  instantaneous_sf$Estimated_Mean_August_Temp <- unlist(estimated_temps)
+  
+  return(instantaneous_sf)
+}
+
+# Example usage:
+# instantaneous_sf <- st_read("path/to/your_instantaneous_readings.shp")
+# result_sf <- est.month.mean(instantaneous_sf, searchdist = set_units(100, "km"))  # Search within 100 km
+# print(result_sf)
