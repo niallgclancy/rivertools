@@ -26,7 +26,11 @@ print(snapped_points)
 
 
 
+
+
+
 **est.month.mean()**
+
 **Description:**
 
 **est.month.mean()** is a function for taking an sf points object of instantaneous stream temperature readings and estimating the mean August temperature at those locations. It searches for USGS NWIS locations within a set 'searchdist' of each instantaneous reading and, if found, creates a mean August temperature estimate based on the relationship between the instantaneous and continuous locations' data. See https://github.com/niallgclancy/StreamTempConversion for proof-of-concept analysis.
