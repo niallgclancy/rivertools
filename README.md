@@ -1,6 +1,6 @@
 This repository currently contains just one function, rivmatch(). It was designed using ChatGPT 4o mini.
 
-**rivmatch()**
+##**rivmatch()**
 
 **Description:**
 
@@ -25,11 +25,7 @@ print(snapped_points)
 
 
 
-
-
-
-
-**est.month.mean()**
+##**est.month.mean()**
 
 **Description:**
 
@@ -44,6 +40,6 @@ searchdist   distance (in units of sf object projection) to search for a USGS NW
 
 
 
-**Note**
+##**Note**
 
 If you are not familiar with the simple feature (sf) package, it is very easy to use. Shapefiles for both points and lines can easily be loaded into R as sf objects.
