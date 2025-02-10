@@ -216,9 +216,10 @@ est.month.mean <- function(instantaneous_sf, searchdist = set_units(50, "miles")
   # Combine date and time columns into a single datetime object
   instantaneous_sf <- instantaneous_sf %>%
     mutate(
-      date.time = make_datetime(Year, Month, Day) + 
-        hours(as.integer(substr(Time, 1, 2))) + 
-        minutes(as.integer(substr(Time, 3, 4)))
+      date_str = sprintf("%04d-%02d-%02d", as.integer(Year), as.integer(Month), as.integer(Day)),
+      time_str = paste0(str_pad(Time, 4, pad = "0")),
+      time_formatted = paste0(substr(time_str, 1, 2), ":", substr(time_str, 3, 4)),
+      date.time = ymd_hm(paste(date_str, time_formatted))
     )
   
   # Convert site metadata to an sf object
@@ -237,6 +238,7 @@ est.month.mean <- function(instantaneous_sf, searchdist = set_units(50, "miles")
     inst_point <- instantaneous_sf[i, ]
     inst_temp <- inst_point$inst.temp
     inst_time <- inst_point$date.time
+    inst_year <- year(inst_time)  # Extract the year from the instantaneous reading
     
     # Find USGS sites within the specified distance
     distances <- st_distance(inst_point, site_sf)
@@ -249,9 +251,10 @@ est.month.mean <- function(instantaneous_sf, searchdist = set_units(50, "miles")
     for (j in seq_len(nrow(nearby_sites))) {
       site_no <- nearby_sites$site_no[j]
       
-      # Retrieve continuous temperature data for August 2023
+      # Retrieve continuous temperature data for August of the same year as the instantaneous reading
       continuous_data <- readNWISuv(siteNumbers = site_no, parameterCd = '00010', 
-                                    startDate = '2023-08-01', endDate = '2023-08-31')
+                                    startDate = paste0(inst_year, '-08-01'), 
+                                    endDate = paste0(inst_year, '-08-31'))
       
       # Identify the correct temperature column name dynamically
       temp_col <- grep('^X_00010_00000$', names(continuous_data), value = TRUE)
