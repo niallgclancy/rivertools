@@ -1,6 +1,6 @@
 This repository currently contains just one function, rivmatch(). It was designed using ChatGPT 4o mini.
 
-##**rivmatch()**
+#rivmatch()
 
 **Description:**
 
