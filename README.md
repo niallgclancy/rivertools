@@ -1,5 +1,7 @@
 This repository currently contains just one function, rivmatch(). It was designed using ChatGPT 4o mini.
 
+**rivmatch()**
+
 **Description:**
 
 **rivmatch()** is a function for cleaning messy river and stream data. Point data is often collected to represent sampling sites (fish surveys, water quality collection, etc), but often the GPS locations do not align with digitized stream layers from NHD or similar line-type GIS files. This function uses the sf (simple features) package for spatial data.
@@ -24,6 +26,8 @@ print(snapped_points)
 
 
 
+**est.month.mean()**
+**Description:**
 
 **est.month.mean()** is a function for taking an sf points object of instantaneous stream temperature readings and estimating the mean August temperature at those locations. It searches for USGS NWIS locations within a set 'searchdist' of each instantaneous reading and, if found, creates a mean August temperature estimate based on the relationship between the instantaneous and continuous locations' data. See https://github.com/niallgclancy/StreamTempConversion for proof-of-concept analysis.
 
