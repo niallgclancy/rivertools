@@ -191,6 +191,7 @@ library(geosphere)  # For calculating distances between sites
 library(readxl)  # For reading Excel files
 library(sf)  # For handling spatial data
 library(units)  # For handling units
+library(stringr)  # For string manipulation
 
 # Load the Excel file with site numbers
 sites_df <- read_excel("sitesnwisalltemps.xlsx")
@@ -215,12 +216,14 @@ est.month.mean <- function(instantaneous_sf, searchdist = set_units(50, "miles")
   
   # Combine date and time columns into a single datetime object
   instantaneous_sf <- instantaneous_sf %>%
+    filter(!is.na(Time)) %>%  # Filter out rows with NA in Time
     mutate(
       date_str = sprintf("%04d-%02d-%02d", as.integer(Year), as.integer(Month), as.integer(Day)),
-      time_str = paste0(str_pad(Time, 4, pad = "0")),
-      time_formatted = paste0(substr(time_str, 1, 2), ":", substr(time_str, 3, 4)),
-      date.time = ymd_hm(paste(date_str, time_formatted))
-    )
+      time_clean = if_else(str_detect(Time, "^\\d{2}:\\d{2}:\\d{2}$"), Time, NA_character_),
+      time_formatted = if_else(!is.na(time_clean), format(hms(time_clean), "%H:%M"), NA_character_),
+      date.time = if_else(!is.na(time_formatted), ymd_hm(paste(date_str, time_formatted)), NA_POSIXct_)
+    ) %>% 
+    filter(!is.na(date.time))  # Filter out rows where date.time could not be parsed
   
   # Convert site metadata to an sf object
   site_sf <- st_as_sf(site_metadata, coords = c("dec_long_va", "dec_lat_va"), crs = 4326)
